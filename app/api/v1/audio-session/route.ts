@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality,ThinkingLevel } from "@google/genai";
 import { NextResponse } from "next/server";
 import type { AudioSessionRequest } from "@/types/live";
 
@@ -40,10 +40,10 @@ export async function POST(request: Request) {
         liveConnectConstraints: {
           model,
           config: {
-            responseModalities: ["AUDIO"],
+            responseModalities: [Modality.AUDIO],
             outputAudioTranscription: {},
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } },
-            thinkingConfig: { thinkingLevel: "MINIMAL" },
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
             systemInstruction: { parts: [{ text: ROAST_AUDIO_CONTEXT }] },
           },
         },

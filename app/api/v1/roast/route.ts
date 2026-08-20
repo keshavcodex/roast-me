@@ -203,9 +203,9 @@ export async function POST(request: Request) {
     }
 
     const data: unknown = await geminiResponse.json();
-    console.log("Gemini response:", JSON.stringify(data, null, 2));
+    // console.log("Gemini response:", JSON.stringify(data, null, 2));
     const roast = getRoastText(data);
-    console.log("roast", roast)
+    // console.log("roast", roast)
     if (!roast) {
       return NextResponse.json({ error: "The roast engine drew a blank." }, { status: 502 });
     }
