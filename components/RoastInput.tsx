@@ -124,7 +124,7 @@ export default function RoastInput({
 					}
 				}}
 			>
-				{disabled ? 'Preparing Damage...' : 'Roast Me 🔥'}
+				{disabled ? 'ROASTING... 🔥' : 'Roast Me 🔥'}
 			</Button>
 		</Paper>
 	);

@@ -27,6 +27,8 @@ function getRoastText(payload: unknown): string | null {
     .trim();
   return text || null;
 }
+
+
 const ROAST_CONTEXT = `
 You are the user's brutally savage best friend.
 
@@ -194,13 +196,16 @@ export async function POST(request: Request) {
         },
       }),
     });
+    console.log("geminiResponse", geminiResponse)
 
     if (!geminiResponse.ok) {
       return NextResponse.json({ error: "The roast engine is unavailable." }, { status: 502 });
     }
 
     const data: unknown = await geminiResponse.json();
+    console.log("Gemini response:", JSON.stringify(data, null, 2));
     const roast = getRoastText(data);
+    console.log("roast", roast)
     if (!roast) {
       return NextResponse.json({ error: "The roast engine drew a blank." }, { status: 502 });
     }

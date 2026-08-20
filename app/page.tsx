@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
@@ -11,6 +11,8 @@ import LoadingState from "@/components/LoadingState";
 import RoastInput from "@/components/RoastInput";
 import RoastResult from "@/components/RoastResult";
 import { roastExcuse } from "@/lib/api";
+import { LiveRoastController } from "@/lib/live-roast";
+import type { LiveRoastPhase } from "@/types/live";
 
 const errorCopy = {
   configuration: "The roast server is still putting its gloves on. Try again in a bit.",
@@ -24,14 +26,30 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [intensity, setIntensity] = useState(5);
   const [roast, setRoast] = useState<string | null>(null);
-  // const [roast, setRoast] = useState<string | null>("Haan toh tere nakhre jhelne ke liye tere pitaji ne wahan trust fund toh choda nahi hai. Ghar baithe baithe tere khwab poore nahi hone wale, isliye ab ye rona band kar aur chupchap tayyar ho ke nikal.");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [phase, setPhase] = useState<LiveRoastPhase>("complete");
+  const [progress, setProgress] = useState(0);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const [needsTap, setNeedsTap] = useState(false);
+  const [audioUnavailable, setAudioUnavailable] = useState(false);
+  const sessionRef = useRef<LiveRoastController | null>(null);
+  const pendingTranscriptRef = useRef("");
+  const audioStartedRef = useRef(false);
+
+  useEffect(() => () => sessionRef.current?.close(), []);
 
   async function handleRoast() {
     const trimmedMessage = message.trim();
     setError(null);
     setRoast(null);
+    setProgress(0);
+    setAudioStarted(false);
+    setNeedsTap(false);
+    setAudioUnavailable(false);
+    sessionRef.current?.close();
+    pendingTranscriptRef.current = "";
+    audioStartedRef.current = false;
 
     if (!trimmedMessage) {
       setError("Give me an excuse first. I can't roast an empty personality.");
@@ -39,23 +57,57 @@ export default function Home() {
     }
 
     setIsLoading(true);
+    let handledAudioFailure = false;
+    const fallBackToText = async () => {
+      if (handledAudioFailure) return;
+      handledAudioFailure = true;
+      sessionRef.current?.close();
+      setAudioUnavailable(true);
+      try {
+        const response = await roastExcuse(trimmedMessage, intensity);
+        setRoast(response.roast);
+      } catch (caught) {
+        const kind = caught instanceof Error && "kind" in caught
+          ? (caught as { kind?: keyof typeof errorCopy }).kind
+          : undefined;
+        setError(kind ? errorCopy[kind] : errorCopy.network);
+      } finally { setIsLoading(false); }
+    };
+
+    const controller = new LiveRoastController({
+      onPhase: setPhase,
+      onAudioStart: () => {
+        audioStartedRef.current = true;
+        setAudioStarted(true);
+        setRoast(pendingTranscriptRef.current);
+      },
+      onTranscript: (text) => {
+        pendingTranscriptRef.current += text;
+        if (audioStartedRef.current && sessionRef.current === controller) setRoast(pendingTranscriptRef.current);
+      },
+      onProgress: setProgress,
+      onAutoplayBlocked: () => setNeedsTap(true),
+      onComplete: () => setIsLoading(false),
+      onError: () => { void fallBackToText(); },
+    });
+    sessionRef.current = controller;
     try {
-      const response = await roastExcuse(trimmedMessage, intensity);
-      setRoast(response.roast);
-    } catch (caught) {
-      const kind = caught instanceof Error && "kind" in caught
-        ? (caught as { kind?: keyof typeof errorCopy }).kind
-        : undefined;
-      setError(kind ? errorCopy[kind] : errorCopy.network);
-    } finally {
-      setIsLoading(false);
-    }
+      await controller.start(trimmedMessage, intensity);
+    } catch { await fallBackToText(); }
   }
 
   function handleAgain() {
     setMessage("");
     setRoast(null);
     setError(null);
+    sessionRef.current?.close();
+    sessionRef.current = null;
+    pendingTranscriptRef.current = "";
+    audioStartedRef.current = false;
+    setAudioStarted(false);
+    setAudioUnavailable(false);
+    setNeedsTap(false);
+    setProgress(0);
     document.getElementById("excuse")?.focus();
   }
 
@@ -74,9 +126,9 @@ export default function Home() {
             onSubmit={handleRoast}
             disabled={isLoading}
           />
-          {isLoading && <LoadingState />}
+          {isLoading && !audioStarted && !audioUnavailable && <LoadingState />}
           {error && <Alert severity="error" sx={{ mt: 2, borderLeft: "3px solid", borderColor: "error.main", bgcolor: "rgba(255,73,46,.1)", color: "#ffd0c9" }}>{error}</Alert>}
-          {roast && <RoastResult roast={roast} onAgain={handleAgain} />}
+          {(audioStarted || audioUnavailable) && <RoastResult roast={roast ?? ""} phase={phase} progress={progress} needsTap={needsTap} audioUnavailable={audioUnavailable} onPlay={() => sessionRef.current?.play()} onPause={() => sessionRef.current?.pause()} onReplay={() => sessionRef.current?.replay()} onVolumeChange={(value) => sessionRef.current?.setVolume(value)} onAgain={handleAgain} />}
         </Container>
       </Box>
       <Footer />
