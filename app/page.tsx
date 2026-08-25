@@ -24,7 +24,7 @@ const errorCopy = {
 
 export default function Home() {
   const [message, setMessage] = useState("");
-  const [intensity, setIntensity] = useState(5);
+  const [intensity, setIntensity] = useState(1);
   const [roast, setRoast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,10 +36,14 @@ export default function Home() {
   const sessionRef = useRef<LiveRoastController | null>(null);
   const pendingTranscriptRef = useRef("");
   const audioStartedRef = useRef(false);
+  const loadingRef = useRef(false);
 
   useEffect(() => () => sessionRef.current?.close(), []);
 
   async function handleRoast() {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+
     const trimmedMessage = message.trim();
     setError(null);
     setRoast(null);
@@ -53,6 +57,7 @@ export default function Home() {
 
     if (!trimmedMessage) {
       setError("Give me an excuse first. I can't roast an empty personality.");
+      loadingRef.current = false;
       return;
     }
 
@@ -71,7 +76,30 @@ export default function Home() {
           ? (caught as { kind?: keyof typeof errorCopy }).kind
           : undefined;
         setError(kind ? errorCopy[kind] : errorCopy.network);
-      } finally { setIsLoading(false); }
+      } finally {
+        setIsLoading(false);
+        loadingRef.current = false;
+      }
+    };
+
+    const persistAudioRoast = async () => {
+      const transcript = pendingTranscriptRef.current.trim();
+      if (!transcript) return;
+
+      try {
+        await fetch("/api/v1/audio-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            kind: "persist",
+            message: trimmedMessage,
+            response: transcript,
+            intensity,
+          }),
+        });
+      } catch (caught) {
+        console.warn("Audio transcript persistence failed.", caught);
+      }
     };
 
     const controller = new LiveRoastController({
@@ -79,6 +107,8 @@ export default function Home() {
       onAudioStart: () => {
         audioStartedRef.current = true;
         setAudioStarted(true);
+        setIsLoading(false);
+        loadingRef.current = false;
         setRoast(pendingTranscriptRef.current);
       },
       onTranscript: (text) => {
@@ -87,7 +117,13 @@ export default function Home() {
       },
       onProgress: setProgress,
       onAutoplayBlocked: () => setNeedsTap(true),
-      onComplete: () => setIsLoading(false),
+      onComplete: () => {
+        setIsLoading(false);
+        loadingRef.current = false;
+      },
+      onGenerationComplete: async () => {
+        await persistAudioRoast();
+      },
       onError: () => { void fallBackToText(); },
     });
     sessionRef.current = controller;
@@ -100,6 +136,8 @@ export default function Home() {
     setMessage("");
     setRoast(null);
     setError(null);
+    setIsLoading(false);
+    loadingRef.current = false;
     sessionRef.current?.close();
     sessionRef.current = null;
     pendingTranscriptRef.current = "";

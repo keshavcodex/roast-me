@@ -18,4 +18,5 @@ export interface LiveRoastCallbacks {
   onAutoplayBlocked: () => void;
   onComplete: () => void;
   onError: (message: string) => void;
+  onGenerationComplete?: () => void;
 }

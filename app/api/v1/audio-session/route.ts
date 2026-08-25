@@ -1,5 +1,7 @@
 import { GoogleGenAI, Modality,ThinkingLevel } from "@google/genai";
 import { NextResponse } from "next/server";
+import { ANONYMOUS_USER_COOKIE, resolveAnonymousUserId } from "@/lib/anonymous-user";
+import { saveRoastRecord } from "@/lib/db";
 import type { AudioSessionRequest } from "@/types/live";
 
 export const runtime = "nodejs";
@@ -20,14 +22,55 @@ function isValidRequest(value: unknown): value is Required<AudioSessionRequest> 
     && Number.isInteger(body.intensity) && body.intensity >= 1 && body.intensity <= 5;
 }
 
+function isPersistRequest(value: unknown): value is { kind: "persist"; message: string; response: string; intensity: number } {
+  if (typeof value !== "object" || value === null) return false;
+  const body = value as Record<string, unknown>;
+  const intensity = body.intensity;
+
+  return body.kind === "persist"
+    && typeof body.message === "string"
+    && body.message.trim().length > 0
+    && body.message.trim().length <= 600
+    && typeof body.response === "string"
+    && body.response.trim().length > 0
+    && typeof intensity === "number"
+    && Number.isInteger(intensity)
+    && intensity >= 1
+    && intensity <= 5;
+}
+
 export async function POST(request: Request) {
+  let body: unknown;
+  try { body = await request.json(); } catch { return NextResponse.json({ error: "That excuse arrived in pieces." }, { status: 400 }); }
+
+  if (isPersistRequest(body)) {
+    const { userId } = resolveAnonymousUserId(request.headers.get("cookie"));
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(ANONYMOUS_USER_COOKIE, userId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 * 2,
+    });
+
+    try {
+      await saveRoastRecord({
+        userId,
+        request: body.message,
+        response: body.response.trim(),
+      });
+    } catch (error) {
+      console.warn("Audio roast text persistence failed.", error);
+    }
+
+    return response;
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_AUDIO_MODEL;
   if (!apiKey) return NextResponse.json({ error: "Audio roast engine is not configured." }, { status: 503 });
   if (!model) return NextResponse.json({ error: "GEMINI_AUDIO_MODEL is required for audio roasts." }, { status: 503 });
-
-  let body: unknown;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "That excuse arrived in pieces." }, { status: 400 }); }
   if (!isValidRequest(body)) return NextResponse.json({ error: "Give me a valid excuse and intensity." }, { status: 400 });
 
   try {

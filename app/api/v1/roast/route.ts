@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ANONYMOUS_USER_COOKIE, resolveAnonymousUserId } from "@/lib/anonymous-user";
+import { saveRoastRecord } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -168,7 +170,7 @@ export async function POST(request: Request) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
   const intensity = typeof body.intensity === "number" && Number.isInteger(body.intensity)
     ? body.intensity
-    : 5;
+    : 1;
 
   if (!message) return NextResponse.json({ error: "An excuse is required." }, { status: 400 });
   if (message.length > 600) return NextResponse.json({ error: "Keep the excuse under 600 characters." }, { status: 400 });
@@ -177,6 +179,7 @@ export async function POST(request: Request) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
   const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+  const { userId } = resolveAnonymousUserId(request.headers.get("cookie"));
 
   try {
     const geminiResponse = await fetch(`${GEMINI_API_URL}/${encodeURIComponent(model)}:generateContent`, {
@@ -188,29 +191,44 @@ export async function POST(request: Request) {
       signal: controller.signal,
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: roastPrompt(message, intensity) }] }],
-        // Gemini 3.x counts thinking and visible output against maxOutputTokens.
-        // A tiny 130-token budget can therefore cut the roast off mid-sentence.
         generationConfig: {
           maxOutputTokens: 130,
           thinkingConfig: { thinkingLevel: "MINIMAL" },
         },
       }),
     });
-    console.log("geminiResponse", geminiResponse)
 
     if (!geminiResponse.ok) {
       return NextResponse.json({ error: "The roast engine is unavailable." }, { status: 502 });
     }
 
     const data: unknown = await geminiResponse.json();
-    // console.log("Gemini response:", JSON.stringify(data, null, 2));
     const roast = getRoastText(data);
-    // console.log("roast", roast)
     if (!roast) {
       return NextResponse.json({ error: "The roast engine drew a blank." }, { status: 502 });
     }
 
-    return NextResponse.json({ roast, intensity });
+    const response = NextResponse.json({ roast, intensity });
+    response.cookies.set(ANONYMOUS_USER_COOKIE, userId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 * 2,
+    });
+
+    try {
+      const res = await saveRoastRecord({
+        userId,
+        request: message,
+        response: roast,
+      });
+      console.log("Roast history persisted successfully.", res);
+    } catch (error) {
+      console.warn("Roast history persistence failed.", error);
+    }
+
+    return response;
   } catch {
     return NextResponse.json({ error: "The roast engine timed out." }, { status: 504 });
   } finally {

@@ -149,8 +149,9 @@ export class LiveRoastController {
 		});
 		if (content.outputTranscription?.text)
 			this.callbacks.onTranscript(content.outputTranscription.text);
-		if (content.generationComplete || content.turnComplete) {
+		if ((content.generationComplete || content.turnComplete) && !this.generationComplete) {
 			this.generationComplete = true;
+			this.callbacks.onGenerationComplete?.();
 			this.finishWhenPlaybackEnds();
 		}
 	}
