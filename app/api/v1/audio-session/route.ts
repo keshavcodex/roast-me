@@ -185,14 +185,6 @@ export async function POST(
 				mode: body.mode
 			});
 
-			console.log(
-				'Audio response persisted successfully.',
-				{
-					mode: body.mode,
-					language:
-						body.language
-				}
-			);
 		} catch (error) {
 			console.warn(
 				'Audio response persistence failed.',

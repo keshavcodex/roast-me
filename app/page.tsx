@@ -41,7 +41,7 @@ export default function Home() {
 	const [outputLanguage, setOutputLanguage] = useState<
 		'auto' | 'english' | 'hindi' | 'hinglish'
 	>('auto');
-	const [intensity, setIntensity] = useState(1);
+	const [intensity, setIntensity] = useState(3);
 
 	const [roast, setRoast] = useState<string | null>(null);
 
@@ -321,7 +321,7 @@ export default function Home() {
 						textAlign: 'left'
 					}}
 				>
-					<Accordion
+					{/* <Accordion
 						disableGutters
 						sx={{
 							mb: 2,
@@ -332,8 +332,8 @@ export default function Home() {
 								display: 'none'
 							}
 						}}
-					>
-						<AccordionSummary
+					> */}
+						{/* <AccordionSummary
 							expandIcon={<ExpandMoreIcon />}
 							sx={{
 								minHeight: 52,
@@ -341,7 +341,7 @@ export default function Home() {
 									my: 1
 								}
 							}}
-						>
+						> */}
 							<Box>
 								<Typography
 									variant='caption'
@@ -349,13 +349,14 @@ export default function Home() {
 										display: 'block',
 										color: 'text.secondary',
 										fontWeight: 700,
-										letterSpacing: '.08em'
+										letterSpacing: '.08em',
+										mb: 0.5
 									}}
 								>
 									OUTPUT LANGUAGE
 								</Typography>
 
-								<Typography
+								{/* <Typography
 									variant='body2'
 									sx={{
 										fontWeight: 700,
@@ -363,11 +364,11 @@ export default function Home() {
 									}}
 								>
 									{outputLanguage === 'auto' ? 'Auto' : outputLanguage}
-								</Typography>
+								</Typography> */}
 							</Box>
-						</AccordionSummary>
+						{/* </AccordionSummary> */}
 
-						<AccordionDetails>
+						{/* <AccordionDetails> */}
 							<Box
 								sx={{
 									display: 'grid',
@@ -375,14 +376,15 @@ export default function Home() {
 										xs: '1fr 1fr',
 										sm: 'repeat(4, 1fr)'
 									},
-									gap: 1
+									gap: 1,
+									my: 1
 								}}
 							>
 								{[
 									{ value: 'auto', label: 'Auto' },
 									{ value: 'english', label: 'English' },
+									{ value: 'hinglish', label: 'Hinglish' },
 									{ value: 'hindi', label: 'Hindi' },
-									{ value: 'hinglish', label: 'Hinglish' }
 								].map((language) => (
 									<Box
 										key={language.value}
@@ -399,7 +401,7 @@ export default function Home() {
 													: 'rgba(255,255,255,.12)',
 											background:
 												outputLanguage === language.value
-													? 'rgba(255,73,46,.12)'
+													? 'rgba(160, 112, 0, 0.36)'
 													: 'transparent',
 											color: 'inherit',
 											borderRadius: 1.5,
@@ -417,8 +419,8 @@ export default function Home() {
 									</Box>
 								))}
 							</Box>
-						</AccordionDetails>
-					</Accordion>
+						{/* </AccordionDetails>
+					</Accordion> */}
 					<RoastInput
 						message={message}
 						mode={mode}

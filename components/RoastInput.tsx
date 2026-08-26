@@ -30,10 +30,20 @@ export default function RoastInput({
 }) {
 	const color = MODE_COLORS[mode];
 
+	const handleAction = (event: React.KeyboardEvent) => {
+		if (event.key !== 'Enter' || event.shiftKey) {
+			return;
+		}
+
+		event.preventDefault();
+
+		onSubmit();
+	};
+
 	return (
 		<Paper
-			component="section"
-			id="main"
+			component='section'
+			id='main'
 			elevation={0}
 			sx={{
 				p: { xs: 2, sm: 2.5 },
@@ -43,12 +53,11 @@ export default function RoastInput({
 
 				boxShadow: `8px 8px 0 ${color.glow}`,
 
-				transition:
-					'border-color .25s ease, box-shadow .25s ease'
+				transition: 'border-color .25s ease, box-shadow .25s ease'
 			}}
 		>
 			<Typography
-				variant="caption"
+				variant='caption'
 				sx={{
 					display: 'block',
 					mb: 1,
@@ -71,6 +80,7 @@ export default function RoastInput({
 					flexWrap: 'wrap',
 					mb: 2
 				}}
+				onKeyDown={handleAction}
 			>
 				{RESPONSE_MODES.map((item) => {
 					const itemColor = MODE_COLORS[item];
@@ -79,39 +89,25 @@ export default function RoastInput({
 					return (
 						<Button
 							key={item}
-							size="small"
-							variant={
-								selected
-									? 'contained'
-									: 'outlined'
-							}
+							size='small'
+							variant={selected ? 'contained' : 'outlined'}
 							disabled={disabled}
-							onClick={() =>
-								onModeChange(item)
-							}
+							onClick={() => onModeChange(item)}
 							sx={{
 								minWidth: 0,
 								textTransform: 'none',
 								fontWeight: 800,
 
-								color: selected
-									? '#fff'
-									: itemColor.main,
+								color: selected ? '#fff' : itemColor.main,
 
-								borderColor:
-									itemColor.main,
+								borderColor: itemColor.main,
 
-								bgcolor: selected
-									? itemColor.main
-									: 'transparent',
+								bgcolor: selected ? itemColor.main : 'transparent',
 
 								'&:hover': {
-									borderColor:
-										itemColor.main,
+									borderColor: itemColor.main,
 
-									bgcolor: selected
-										? itemColor.main
-										: itemColor.glow
+									bgcolor: selected ? itemColor.main : itemColor.glow
 								},
 
 								transition:
@@ -125,9 +121,9 @@ export default function RoastInput({
 			</Box>
 
 			<Typography
-				component="label"
-				htmlFor="excuse"
-				variant="caption"
+				component='label'
+				htmlFor='excuse'
+				variant='caption'
 				sx={{
 					display: 'block',
 					mb: 1,
@@ -144,7 +140,7 @@ export default function RoastInput({
 			</Typography>
 
 			<TextField
-				id="excuse"
+				id='excuse'
 				multiline
 				minRows={4}
 				fullWidth
@@ -155,23 +151,8 @@ export default function RoastInput({
 						maxLength: 600
 					}
 				}}
-				onChange={(event) =>
-					onMessageChange(
-						event.target.value
-					)
-				}
-				onKeyDown={(event) => {
-					if (event.key !== 'Enter') {
-						return;
-					}
-
-					if (event.shiftKey) {
-						return;
-					}
-
-					event.preventDefault();
-					onSubmit();
-				}}
+				onChange={(event) => onMessageChange(event.target.value)}
+				onKeyDown={handleAction}
 				placeholder="Tell me what's on your mind..."
 				sx={{
 					'& .MuiOutlinedInput-root': {
@@ -213,7 +194,7 @@ export default function RoastInput({
 				}}
 			>
 				<Typography
-					variant="caption"
+					variant='caption'
 					sx={{
 						color: '#897b74',
 						fontWeight: 800,
@@ -221,11 +202,11 @@ export default function RoastInput({
 						fontSize: 10
 					}}
 				>
-					⌘ + ENTER TO GO
+					ENTER TO GO
 				</Typography>
 
 				<Typography
-					variant="caption"
+					variant='caption'
 					sx={{
 						color: '#897b74',
 						fontWeight: 800
@@ -237,8 +218,8 @@ export default function RoastInput({
 
 			<Button
 				fullWidth
-				variant="contained"
-				size="large"
+				variant='contained'
+				size='large'
 				disabled={disabled}
 				onClick={onSubmit}
 				sx={{
@@ -254,8 +235,7 @@ export default function RoastInput({
 
 						boxShadow: `6px 6px 0 ${color.dark}`,
 
-						transform:
-							'translate(-2px,-2px)'
+						transform: 'translate(-2px,-2px)'
 					},
 
 					'&.Mui-disabled': {
@@ -267,9 +247,7 @@ export default function RoastInput({
 						'background-color .25s ease, box-shadow .25s ease, transform .15s ease'
 				}}
 			>
-				{disabled
-					? 'GENERATING...'
-					: `${MODE_LABELS[mode]} →`}
+				{disabled ? 'GENERATING...' : `${MODE_LABELS[mode]} →`}
 			</Button>
 		</Paper>
 	);
