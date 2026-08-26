@@ -1,9 +1,15 @@
+"use client";
+
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import { usePathname } from "next/navigation";
 import packageJson from "../package.json";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const isAdminPage = pathname === "/analyse";
+
   return (
     <Box
       component="footer"
@@ -86,6 +92,19 @@ export default function Footer() {
           variant="caption"
         >
           LinkedIn
+        </Link>
+
+        <Typography variant="caption" aria-hidden>
+          •
+        </Typography>
+
+        <Link
+          href={isAdminPage ? "/" : "/analyse"}
+          color="inherit"
+          underline="hover"
+          variant="caption"
+        >
+          {isAdminPage ? "Home" : "Admin"}
         </Link>
       </Box>
     </Box>
