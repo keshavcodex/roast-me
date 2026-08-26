@@ -384,8 +384,8 @@ async function page({
                                         </Typography>
 
                                         <Typography
-                                            fontWeight={800}
                                             color="primary.main"
+                                            sx={{ fontWeight: 800 }}
                                         >
                                             {count}
                                         </Typography>
@@ -448,8 +448,8 @@ async function page({
                                         </Typography>
 
                                         <Typography
-                                            fontWeight={800}
                                             color="primary.main"
+                                            sx={{ fontWeight: 800 }}
                                         >
                                             {count}
                                         </Typography>
