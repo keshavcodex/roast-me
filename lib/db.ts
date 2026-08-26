@@ -6,6 +6,13 @@ export interface RoastRecordInput {
   response: string;
 }
 
+export interface RoastDocument {
+  userId: string;
+  request: string;
+  response: string;
+  createdAt: Date;
+}
+
 const ROASTS_COLLECTION = "roasts";
 const DEFAULT_DB_NAME = "roast_me";
 
@@ -72,6 +79,17 @@ export async function getUniqueUserCount(): Promise<number> {
 export async function getTotalRoasts(): Promise<number> {
   const database = await getDb();
   return database.collection(ROASTS_COLLECTION).countDocuments();
+}
+
+export async function getRoastDocuments(skip = 0, limit = 25): Promise<RoastDocument[]> {
+  const database = await getDb();
+
+  return database.collection<RoastDocument>(ROASTS_COLLECTION)
+    .find({}, { projection: { _id: 0, userId: 1, request: 1, response: 1, createdAt: 1 } })
+    .sort({ createdAt: -1, _id: -1 })
+    .skip(skip)
+    .limit(limit)
+    .toArray();
 }
 
 export async function getRoastsPerUser(): Promise<Array<{ userId: string; count: number }>> {

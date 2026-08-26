@@ -1,25 +1,17 @@
 import React from 'react';
 
-import { createHash } from 'node:crypto';
-
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { getRoastAnalytics } from '@/lib/db';
+import { ADMIN_SESSION_COOKIE, getAdminSessionValue, isAdminSession } from '@/lib/admin-auth';
 
 import { Box, Button, Divider, Typography } from '@mui/material';
 
 import PasswordField from '@/components/PasswordField';
 import AppShell from '@/components/AppShell';
-
-const ADMIN_SESSION_COOKIE = 'roast-me-admin';
-
-function getAdminSessionValue() {
-	const password = process.env.ADMIN_PASSWORD;
-
-	return password ? createHash('sha256').update(password).digest('hex') : null;
-}
+import AdminDocuments from '@/components/AdminDocuments';
 
 async function authenticateAdmin(formData: FormData) {
 	'use server';
@@ -71,16 +63,14 @@ async function page({
 
 	const sessionValue = getAdminSessionValue();
 
-	const isAdmin =
-		sessionValue &&
-		cookieStore.get(ADMIN_SESSION_COOKIE)?.value === sessionValue;
+	const isAdmin = isAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 
 	if (!isAdmin) {
 		const { error } = await searchParams;
 
 		return (
 			<AppShell>
-				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, minHeight: '100vh' }}>
+				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, minHeight: '10a0vh' }}>
 					<Typography variant='h4'>Admin access</Typography>
 
 					<Box
@@ -124,11 +114,13 @@ async function page({
 			>
 				<Typography variant='h4'>Roast analytics</Typography>
 
-				<Box component='form' action={logoutAdmin}>
-					<Button type='submit' variant='outlined' color='error'>
-						Logout
-					</Button>
-				</Box>
+					<Box sx={{ display: 'flex', gap: 1 }}>
+						<Box component='form' action={logoutAdmin}>
+							<Button type='submit' variant='outlined' color='error'>
+								Logout
+							</Button>
+						</Box>
+					</Box>
 			</Box>
 
 			<Divider
@@ -193,6 +185,8 @@ async function page({
 					</li>
 				))}
 			</ul>
+
+			<AdminDocuments />
 		</AppShell>
 	);
 }
