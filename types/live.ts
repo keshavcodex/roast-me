@@ -1,8 +1,12 @@
+import { OutputLanguage, ResponseMode } from '@/lib/context';
+
 export type LiveRoastPhase = "connecting" | "roasting" | "playing" | "paused" | "complete" | "error";
 
 export interface AudioSessionRequest {
   message: string;
   intensity: number;
+  mode: ResponseMode;
+  language: OutputLanguage;
 }
 
 export interface AudioSessionResponse {
