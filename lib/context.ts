@@ -425,72 +425,93 @@ export function getAudioContext(
   return `${getLanguageRule(language)}\n${AUDIO_CONTEXTS[mode]}`;
 }
 
-
 export const MODE_COLORS: Record<
 	ResponseMode,
 	{
 		main: string;
 		dark: string;
+		background: string;
+		paper: string;
 		glow: string;
 	}
 > = {
 	roast: {
 		main: '#ff492e',
 		dark: '#8f1e11',
-		glow: 'rgba(255,73,46,.22)'
+		background: '#100d0d',
+		paper: '#1c1414',
+		glow: 'rgba(255, 73, 46, 0.30)'
 	},
 
 	senti: {
-		main: '#b56cff',
-		dark: '#6335a0',
-		glow: 'rgba(181,108,255,.22)'
+		main: '#c084fc',
+		dark: '#6b21a8',
+		background: '#100c16',
+		paper: '#1c1424',
+		glow: 'rgba(192, 132, 252, 0.25)'
 	},
 
 	motivate: {
-		main: '#35d07f',
-		dark: '#187344',
-		glow: 'rgba(53,208,127,.22)'
+		main: '#4ade80',
+		dark: '#166534',
+		background: '#09130d',
+		paper: '#112017',
+		glow: 'rgba(74, 222, 128, 0.23)'
 	},
 
 	comfort: {
-		main: '#5bbcff',
-		dark: '#276d9c',
-		glow: 'rgba(91,188,255,.22)'
+		main: '#60a5fa',
+		dark: '#1d4ed8',
+		background: '#09111c',
+		paper: '#111d2b',
+		glow: 'rgba(96, 165, 250, 0.24)'
 	},
 
 	'savage-motivation': {
-		main: '#ff9f1c',
-		dark: '#a45e00',
-		glow: 'rgba(255,159,28,.22)'
+		main: '#f97316',
+		dark: '#9a3412',
+		background: '#160d08',
+		paper: '#24150d',
+		glow: 'rgba(249, 115, 22, 0.28)'
 	},
 
 	dramatic: {
-		main: '#ff4f9a',
-		dark: '#9d285d',
-		glow: 'rgba(255,79,154,.22)'
+		main: '#e879f9',
+		dark: '#86198f',
+		background: '#160b18',
+		paper: '#25132a',
+		glow: 'rgba(232, 121, 249, 0.27)'
 	},
 
 	jealous: {
-		main: '#c6e636',
-		dark: '#71851b',
-		glow: 'rgba(198,230,54,.22)'
+		main: '#8cc531',
+		dark: '#4d7c0f',
+		background: '#101507',
+		paper: '#1b230c',
+		glow: 'rgba(163, 230, 53, 0.23)'
 	},
 
 	heartbroken: {
-		main: '#ff6b81',
-		dark: '#9f3043',
-		glow: 'rgba(255,107,129,.22)'
+		main: '#fb7185',
+		dark: '#9f1239',
+		background: '#180b10',
+		paper: '#26131a',
+		glow: 'rgba(251, 113, 133, 0.27)'
 	},
 
 	angry: {
-		main: '#ff3030',
-		dark: '#8f1010',
-		glow: 'rgba(255,48,48,.24)'
+		main: '#ef4444',
+		dark: '#991b1b',
+		background: '#170808',
+		paper: '#260e0e',
+		glow: 'rgba(239, 68, 68, 0.30)'
 	},
 
 	chaotic: {
-		main: '#d946ef',
-		dark: '#7b1688',
-		glow: 'rgba(217,70,239,.24)'
+		main: '#f43f5e',
+		dark: '#9f1239',
+		background: '#150916',
+		paper: '#241025',
+		glow: 'rgba(244, 63, 94, 0.28)'
 	}
 };

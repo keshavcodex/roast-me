@@ -1,14 +1,39 @@
 @import "tailwindcss";
 
-html { background: #100d0d; }
+html,
+body {
+	min-height: 100%;
+	margin: 0;
+}
+
+html {
+	background: #100d0d;
+}
 
 body {
-  min-height: 100vh;
-  margin: 0;
-  background: radial-gradient(ellipse 52% 42% at 50% 37%, rgba(128, 27, 16, .3), transparent 72%), #100d0d;
+	min-height: 100vh;
+
+	background: #100d0d;
+
+	color: #fff5eb;
+
+	transition:
+		background 400ms ease,
+		color 400ms ease;
+}
+
+* {
+	box-sizing: border-box;
 }
 
 @keyframes result-in {
-  from { opacity: 0; transform: translateY(17px) rotate(.6deg); }
-  to { opacity: 1; transform: translateY(0) rotate(0); }
+	from {
+		opacity: 0;
+		transform: translateY(17px) rotate(0.6deg);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) rotate(0);
+	}
 }

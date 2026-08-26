@@ -37,9 +37,12 @@ export default function RoastInput({
 			elevation={0}
 			sx={{
 				p: { xs: 2, sm: 2.5 },
+
 				border: '1px solid',
 				borderColor: color.main,
+
 				boxShadow: `8px 8px 0 ${color.glow}`,
+
 				transition:
 					'border-color .25s ease, box-shadow .25s ease'
 			}}
@@ -49,9 +52,12 @@ export default function RoastInput({
 				sx={{
 					display: 'block',
 					mb: 1,
+
 					color: color.main,
+
 					fontWeight: 900,
 					letterSpacing: '.15em',
+
 					transition: 'color .25s ease'
 				}}
 			>
@@ -102,6 +108,7 @@ export default function RoastInput({
 								'&:hover': {
 									borderColor:
 										itemColor.main,
+
 									bgcolor: selected
 										? itemColor.main
 										: itemColor.glow
@@ -124,9 +131,12 @@ export default function RoastInput({
 				sx={{
 					display: 'block',
 					mb: 1,
+
 					color: color.main,
+
 					fontWeight: 900,
 					letterSpacing: '.15em',
+
 					transition: 'color .25s ease'
 				}}
 			>
@@ -146,7 +156,9 @@ export default function RoastInput({
 					}
 				}}
 				onChange={(event) =>
-					onMessageChange(event.target.value)
+					onMessageChange(
+						event.target.value
+					)
 				}
 				onKeyDown={(event) => {
 					if (event.key !== 'Enter') {
@@ -164,10 +176,12 @@ export default function RoastInput({
 				sx={{
 					'& .MuiOutlinedInput-root': {
 						p: 1,
+
 						fontSize: {
 							xs: 19,
 							sm: 21
 						},
+
 						bgcolor: 'transparent',
 
 						'& fieldset': {
@@ -230,13 +244,18 @@ export default function RoastInput({
 				sx={{
 					minHeight: 58,
 					fontSize: 16,
+
 					bgcolor: color.main,
+
 					boxShadow: `4px 4px 0 ${color.dark}`,
 
 					'&:hover': {
 						bgcolor: color.main,
+
 						boxShadow: `6px 6px 0 ${color.dark}`,
-						transform: 'translate(-2px,-2px)'
+
+						transform:
+							'translate(-2px,-2px)'
 					},
 
 					'&.Mui-disabled': {

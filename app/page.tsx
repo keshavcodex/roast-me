@@ -109,7 +109,12 @@ export default function Home() {
 			setAudioUnavailable(true);
 
 			try {
-				const response = await roastExcuse(trimmedMessage, intensity, mode, outputLanguage);
+				const response = await roastExcuse(
+					trimmedMessage,
+					intensity,
+					mode,
+					outputLanguage
+				);
 
 				setRoast(response.roast);
 			} catch (caught) {
@@ -224,8 +229,12 @@ export default function Home() {
 	}
 
 	return (
-		<AppShell>
-			<Header intensity={intensity} onIntensityChange={setIntensity} />
+		<AppShell mode={mode}>
+			<Header
+				mode={mode}
+				intensity={intensity}
+				onIntensityChange={setIntensity}
+			/>
 
 			<Box
 				component='section'
