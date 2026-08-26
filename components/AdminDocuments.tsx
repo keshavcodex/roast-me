@@ -1,192 +1,429 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+    useEffect,
+    useRef,
+    useState
+} from 'react';
 
 import {
-	Box,
-	Button,
-	CircularProgress,
-	Paper,
-	Stack,
-	Typography
+    Box,
+    Button,
+    CircularProgress,
+    Paper,
+    Stack,
+    Typography
 } from '@mui/material';
 
+import {
+    MODE_COLORS,
+    MODE_LABELS,
+    type ResponseMode
+} from '@/lib/context';
+
 interface RoastDocument {
-	userId: string;
-	request: string;
-	response: string;
-	createdAt: string;
+    userId: string;
+    request: string;
+    response: string;
+    createdAt: string;
+    mode?: ResponseMode;
 }
 
 interface DocumentsResponse {
-	documents?: RoastDocument[];
-	hasMore?: boolean;
-	error?: string;
+    documents?: RoastDocument[];
+    hasMore?: boolean;
+    error?: string;
 }
 
 const PAGE_SIZE = 10;
 
 function AdminDocuments() {
-	const [documents, setDocuments] = useState<RoastDocument[]>([]);
-	const [isOpen, setIsOpen] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const [hasMore, setHasMore] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const loadMoreRef = useRef<HTMLDivElement>(null);
+    const [documents, setDocuments] =
+        useState<RoastDocument[]>([]);
 
-	async function loadDocuments(reset = false) {
-		if (isLoading || (!reset && !hasMore)) return;
+    const [isOpen, setIsOpen] =
+        useState(false);
 
-		setIsLoading(true);
-		setError(null);
+    const [isLoading, setIsLoading] =
+        useState(false);
 
-		try {
-			const skip = reset ? 0 : documents.length;
-			const response = await fetch(
-				`/api/v1/admin/documents?skip=${skip}&limit=${PAGE_SIZE}`
-			);
-			const payload = (await response.json()) as DocumentsResponse;
+    const [hasMore, setHasMore] =
+        useState(false);
 
-			if (!response.ok || !payload.documents) {
-				throw new Error(payload.error ?? 'Documents could not be loaded.');
-			}
+    const [error, setError] =
+        useState<string | null>(null);
 
-			setDocuments((current) =>
-				reset
-					? (payload.documents ?? [])
-					: [...current, ...(payload.documents ?? [])]
-			);
-			setHasMore(payload.hasMore ?? false);
-			setIsOpen(true);
-		} catch (loadError) {
-			setError(
-				loadError instanceof Error
-					? loadError.message
-					: 'Documents could not be loaded.'
-			);
-		} finally {
-			setIsLoading(false);
-		}
-	}
+    const loadMoreRef =
+        useRef<HTMLDivElement>(null);
 
-	useEffect(() => {
-		if (!isOpen || !loadMoreRef.current) return;
+    async function loadDocuments(
+        reset = false
+    ) {
+        if (
+            isLoading ||
+            (!reset && !hasMore)
+        ) {
+            return;
+        }
 
-		const observer = new IntersectionObserver(
-			([entry]) => {
-				if (entry.isIntersecting) void loadDocuments();
-			},
-			{ rootMargin: '240px' }
-		);
+        setIsLoading(true);
+        setError(null);
 
-		observer.observe(loadMoreRef.current);
+        try {
+            const skip = reset
+                ? 0
+                : documents.length;
 
-		return () => observer.disconnect();
-	}, [documents.length, hasMore, isLoading, isOpen]);
+            const response = await fetch(
+                `/api/v1/admin/documents?skip=${skip}&limit=${PAGE_SIZE}`
+            );
 
-	return (
-		<Box sx={{ width: '80%', mt: 5, pb: 8 }}>
-			<Box
-				sx={{
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'end',
-					gap: 2,
-					mb: 2
-				}}
-			>
-				<Box>
-					<Typography variant='h4'>Roast archive</Typography>
-					<Typography color='text.secondary'>Newest roasts first</Typography>
-				</Box>
-				{isOpen && (
-					<Typography color='text.secondary'>
-						{documents.length} loaded
-					</Typography>
-				)}
-			</Box>
+            const payload =
+                (await response.json()) as DocumentsResponse;
 
-			{!isOpen && (
-				<Button
-					onClick={() => void loadDocuments(true)}
-					variant='contained'
-					disabled={isLoading}
-				>
-					{isLoading ? 'Loading archive...' : 'Load documents'}
-				</Button>
-			)}
+            if (
+                !response.ok ||
+                !payload.documents
+            ) {
+                throw new Error(
+                    payload.error ??
+                        'Documents could not be loaded.'
+                );
+            }
 
-			{error && (
-				<Typography color='error' sx={{ mt: 2 }}>
-					{error}
-				</Typography>
-			)}
+            setDocuments((current) =>
+                reset
+                    ? payload.documents ?? []
+                    : [
+                          ...current,
+                          ...(payload.documents ?? [])
+                      ]
+            );
 
-			{isOpen && documents.length === 0 && !isLoading && (
-				<Paper sx={{ p: 3, mt: 2 }}>
-					<Typography color='text.secondary'>
-						No roasts have been recorded yet.
-					</Typography>
-				</Paper>
-			)}
+            setHasMore(
+                payload.hasMore ?? false
+            );
 
-			<Stack spacing={2} sx={{ mt: 2 }}>
-				{documents.map((document, index) => (
-					<Paper
-						key={`${document.createdAt}-${index}`}
-						sx={{
-							p: { xs: 2, sm: 2.5 },
-							borderLeft: '3px solid',
-							borderColor: 'primary.main'
-						}}
-					>
-						<Stack spacing={1}>
-							<Box
-								sx={{
-									display: 'flex',
-									justifyContent: 'space-between',
-									gap: 2,
-									flexWrap: 'wrap'
-								}}
-							>
-								<Typography variant='caption' color='secondary.main'>
-									{document.userId}
-								</Typography>
-								<Typography variant='caption' color='text.secondary'>
-									{new Date(document.createdAt).toLocaleString('en-GB')}
-								</Typography>
-							</Box>
-							<Typography>
-								<strong>Excuse:</strong> {document.request}
-							</Typography>
-							<Typography sx={{ color: '#ff9090' }}>
-								<strong>Roast:</strong> {document.response}
-							</Typography>
-						</Stack>
-					</Paper>
-				))}
-			</Stack>
+            setIsOpen(true);
+        } catch (loadError) {
+            setError(
+                loadError instanceof Error
+                    ? loadError.message
+                    : 'Documents could not be loaded.'
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
-			{isOpen && (
-				<Box
-					ref={loadMoreRef}
-					sx={{
-						display: 'flex',
-						justifyContent: 'center',
-						minHeight: 72,
-						alignItems: 'center'
-					}}
-				>
-					{isLoading && <CircularProgress size={24} />}
-					{!isLoading && !hasMore && documents.length > 0 && (
-						<Typography variant='caption' color='text.secondary'>
-							You have reached the end of the archive.
-						</Typography>
-					)}
-				</Box>
-			)}
-		</Box>
-	);
+    useEffect(() => {
+        if (
+            !isOpen ||
+            !loadMoreRef.current
+        ) {
+            return;
+        }
+
+        const observer =
+            new IntersectionObserver(
+                ([entry]) => {
+                    if (
+                        entry.isIntersecting
+                    ) {
+                        void loadDocuments();
+                    }
+                },
+                {
+                    rootMargin: '240px'
+                }
+            );
+
+        observer.observe(
+            loadMoreRef.current
+        );
+
+        return () =>
+            observer.disconnect();
+    }, [
+        documents.length,
+        hasMore,
+        isLoading,
+        isOpen
+    ]);
+
+    return (
+        <Box
+            sx={{
+                width: '100%',
+                mt: 6,
+                pb: 8
+            }}
+        >
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent:
+                        'space-between',
+                    alignItems: {
+                        xs: 'flex-start',
+                        sm: 'flex-end'
+                    },
+                    flexDirection: {
+                        xs: 'column',
+                        sm: 'row'
+                    },
+                    gap: 2,
+                    mb: 2
+                }}
+            >
+                <Box>
+                    <Typography variant="h4">
+                        Response archive
+                    </Typography>
+
+                    <Typography
+                        color="text.secondary"
+                    >
+                        Newest responses first.
+                    </Typography>
+                </Box>
+
+                {isOpen && (
+                    <Typography
+                        color="text.secondary"
+                    >
+                        {documents.length} loaded
+                    </Typography>
+                )}
+            </Box>
+
+            {!isOpen && (
+                <Button
+                    onClick={() =>
+                        void loadDocuments(true)
+                    }
+                    variant="contained"
+                    disabled={isLoading}
+                >
+                    {isLoading
+                        ? 'Loading archive...'
+                        : 'Load documents'}
+                </Button>
+            )}
+
+            {error && (
+                <Typography
+                    color="error"
+                    sx={{ mt: 2 }}
+                >
+                    {error}
+                </Typography>
+            )}
+
+            {isOpen &&
+                documents.length === 0 &&
+                !isLoading && (
+                    <Paper
+                        sx={{
+                            p: 3,
+                            mt: 2
+                        }}
+                    >
+                        <Typography color="text.secondary">
+                            No responses have been recorded yet.
+                        </Typography>
+                    </Paper>
+                )}
+
+            <Stack
+                spacing={2}
+                sx={{ mt: 2 }}
+            >
+                {documents.map(
+                    (document, index) => {
+                        const mode =
+                            document.mode ??
+                            'roast';
+
+                        const color =
+                            MODE_COLORS[
+                                mode
+                            ];
+
+                        return (
+                            <Paper
+                                key={`${document.createdAt}-${index}`}
+                                sx={{
+                                    p: {
+                                        xs: 2,
+                                        sm: 2.5
+                                    },
+                                    borderLeft:
+                                        '3px solid',
+                                    borderColor:
+                                        color.main,
+                                    transition:
+                                        'border-color .2s ease'
+                                }}
+                            >
+                                <Stack
+                                    spacing={1.5}
+                                >
+                                    {/* Metadata */}
+                                    <Box
+                                        sx={{
+                                            display:
+                                                'flex',
+                                            justifyContent:
+                                                'space-between',
+                                            alignItems:
+                                                'center',
+                                            gap: 2,
+                                            flexWrap:
+                                                'wrap'
+                                        }}
+                                    >
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color:
+                                                    color.main,
+                                                fontWeight: 900,
+                                                letterSpacing:
+                                                    '.08em'
+                                            }}
+                                        >
+                                            {MODE_LABELS[
+                                                mode
+                                            ] ??
+                                                mode.toUpperCase()}
+                                        </Typography>
+
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            {new Date(
+                                                document.createdAt
+                                            ).toLocaleString(
+                                                'en-GB'
+                                            )}
+                                        </Typography>
+                                    </Box>
+
+                                    {/* User */}
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color:
+                                                'text.secondary',
+                                            fontFamily:
+                                                'monospace',
+                                            overflow:
+                                                'hidden',
+                                            textOverflow:
+                                                'ellipsis'
+                                        }}
+                                    >
+                                        {document.userId}
+                                    </Typography>
+
+                                    {/* Request */}
+                                    <Box>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                display:
+                                                    'block',
+                                                color:
+                                                    'text.secondary',
+                                                fontWeight:
+                                                    900,
+                                                mb: 0.5,
+                                                letterSpacing:
+                                                    '.08em'
+                                            }}
+                                        >
+                                            USER MESSAGE
+                                        </Typography>
+
+                                        <Typography>
+                                            {
+                                                document.request
+                                            }
+                                        </Typography>
+                                    </Box>
+
+                                    {/* Response */}
+                                    <Box>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                display:
+                                                    'block',
+                                                color:
+                                                    color.main,
+                                                fontWeight:
+                                                    900,
+                                                mb: 0.5,
+                                                letterSpacing:
+                                                    '.08em'
+                                            }}
+                                        >
+                                            RESPONSE
+                                        </Typography>
+
+                                        <Typography
+                                            sx={{
+                                                color:
+                                                    'text.primary'
+                                            }}
+                                        >
+                                            {
+                                                document.response
+                                            }
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Paper>
+                        );
+                    }
+                )}
+            </Stack>
+
+            {isOpen && (
+                <Box
+                    ref={loadMoreRef}
+                    sx={{
+                        display: 'flex',
+                        justifyContent:
+                            'center',
+                        minHeight: 72,
+                        alignItems:
+                            'center'
+                    }}
+                >
+                    {isLoading && (
+                        <CircularProgress
+                            size={24}
+                        />
+                    )}
+
+                    {!isLoading &&
+                        !hasMore &&
+                        documents.length >
+                            0 && (
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
+                            >
+                                You have reached the end of the archive.
+                            </Typography>
+                        )}
+                </Box>
+            )}
+        </Box>
+    );
 }
 
 export default AdminDocuments;
